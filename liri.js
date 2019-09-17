@@ -27,57 +27,58 @@ for (var i = 3; i < nodeArgs.length; i++) {
     }
 }
 
-//Bands-in-town url
-var bands = "https://rest.bandsintown.com/artists/" + userQuery + "/events?app_id=codingbootcamp";
-
-//OMDB url
-var movies = "http://www.omdbapi.com/?t=" + userQuery + "&y=&plot=short&apikey=trilogy";
-
 //spacer
 var spacer = "===========================\n";
 
-switch (method) {
-    case 'concert-this': bandsInTown();
-        break;
-
-    case 'spotify-this-song':
-        if (nodeArgs.length === 3) {
-            spotifyEmpty();
-        } else {
-            spotifyThis();
-        }
-        break;
-
-    case 'movie-this':
-        if (nodeArgs.length === 3) {
-            movieEmpty();
-        } else {
-            movieSearch();
-        }
-        break;
-
-    case 'do-what-it-says':
-        break;
-
-    default:
-        console.log("I'm sorry, " + method + " is not a valid command.\n" +
-            "======Try these!======\n" +
-            "concert-this\n" +
-            "spotify-this-song\n" +
-            "movie-this\n" +
-            "do-what-it-says\n"
-        );
-}
+liriBot();
 
 //========== FUNCTIONS ==========
+
+function liriBot() {
+    switch (method) {
+        case 'concert-this': bandsInTown();
+            break;
+
+        case 'spotify-this-song':
+            if (nodeArgs.length === 3) {
+                spotifyEmpty();
+            } else {
+                spotifyThis();
+            }
+            break;
+
+        case 'movie-this':
+            if (nodeArgs.length === 3) {
+                movieEmpty();
+            } else {
+                movieSearch();
+            }
+            break;
+
+        case 'do-what-it-says': liriThis();
+            break;
+
+        default:
+            console.log("I'm sorry, " + method + " is not a valid command.\n" +
+                "======Try these!======\n" +
+                "concert-this\n" +
+                "spotify-this-song\n" +
+                "movie-this\n" +
+                "do-what-it-says\n"
+            );
+    }
+}
 function bandsInTown() {
+
+    //Bands-in-town url
+    var bands = "https://rest.bandsintown.com/artists/" + userQuery + "/events?app_id=codingbootcamp";
 
     axios.get(bands).then(function (response) {
         // console.log(response);
         console.log(userQuery);
         if (response.data.length === 0) {
             console.log(spacer);
-            console.log("This artist does not have any upcoming events!");
+            console.log("This artist does not have any upcoming events!\n");
             console.log(spacer);
         } else if (response.data === '\n{warn=Not found}\n') {
             console.log(spacer);
@@ -195,6 +196,9 @@ function spotifyEmpty() {
 
 function movieSearch() {
 
+    //OMDB url
+    var movies = "http://www.omdbapi.com/?t=" + userQuery + "&y=&plot=short&apikey=trilogy";
+
     axios.get(movies).then(function (response) {
         // console.log(response);
         // console.log(userQuery);
@@ -294,5 +298,41 @@ function movieEmpty() {
             }
             console.log(error.config);
         });
+
+}
+
+function liriThis() {
+
+    fs.readFile("random.txt", "utf8", function (error, data) {
+
+        if (error) {
+            return console.log(error);
+        }
+        var dataArr = data.split(",");
+
+        for (var z = 0; z < dataArr.length; z++) {
+            process.argv.push(dataArr[z]);
+        }
+        process.argv.splice(2, 1);
+
+        nodeArgs = process.argv;
+        // console.log(nodeArgs);
+
+
+        method = process.argv[2];
+        userQuery = "";
+        for (var i = 3; i < nodeArgs.length; i++) {
+
+            if (i > 3 && i < nodeArgs.length) {
+                userQuery = userQuery + "+" + nodeArgs[i];
+            } else {
+                userQuery += nodeArgs[i];
+
+            }
+        }
+
+        liriBot();
+
+    });
 
 }

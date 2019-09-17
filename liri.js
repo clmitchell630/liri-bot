@@ -4,44 +4,56 @@ require("dotenv").config();
 //Spotify Keys
 var keys = require("./keys.js");
 // Node-Spotify-API
-//var spotify = new Spotify(keys.spotify);
 var Spotify = require("node-spotify-api");
+var spotify = new Spotify(keys.spotify);
 // Axios - for OMDB API and Bands In Town API
 var axios = require("axios");
 // Moment
 var moment = require("moment");
+// fs
+var fs = require("fs");
 
 //handling arguments
 var nodeArgs = process.argv;
 var method = process.argv[2];
-var query = "";
+var userQuery = "";
 for (var i = 3; i < nodeArgs.length; i++) {
 
     if (i > 3 && i < nodeArgs.length) {
-        query = query + "+" + nodeArgs[i];
+        userQuery = userQuery + "+" + nodeArgs[i];
     } else {
-        query += nodeArgs[i];
+        userQuery += nodeArgs[i];
 
     }
 }
 
 //Bands-in-town url
-var bands = "https://rest.bandsintown.com/artists/" + query + "/events?app_id=codingbootcamp";
+var bands = "https://rest.bandsintown.com/artists/" + userQuery + "/events?app_id=codingbootcamp";
 
 //OMDB url
-var movie = "http://www.omdbapi.com/?t=" + query + "&y=&plot=short&apikey=trilogy";
+var movies = "http://www.omdbapi.com/?t=" + userQuery + "&y=&plot=short&apikey=trilogy";
 
 //spacer
-var spacer = "======================";
+var spacer = "===========================\n";
 
 switch (method) {
     case 'concert-this': bandsInTown();
         break;
 
     case 'spotify-this-song':
+        if (nodeArgs.length === 3) {
+            spotifyEmpty();
+        } else {
+            spotifyThis();
+        }
         break;
 
     case 'movie-this':
+        if (nodeArgs.length === 3) {
+            movieEmpty();
+        } else {
+            movieSearch();
+        }
         break;
 
     case 'do-what-it-says':
@@ -57,24 +69,25 @@ switch (method) {
         );
 }
 
+//========== FUNCTIONS ==========
 function bandsInTown() {
 
     axios.get(bands).then(function (response) {
         // console.log(response);
-        console.log(query);
+        console.log(userQuery);
         if (response.data.length === 0) {
             console.log(spacer);
             console.log("This artist does not have any upcoming events!");
             console.log(spacer);
         } else if (response.data === '\n{warn=Not found}\n') {
             console.log(spacer);
-            console.log("This is not a valid artist!");
+            console.log("This is not a valid artist...\n");
             console.log(spacer);
 
         } else {
-            
+
             for (var i = 0; i < response.data.length; i++) {
-                
+
                 var venueLoc;
                 var concertDate = moment(response.data[i].datetime).format("M/DD/YY, h:mma");
 
@@ -90,10 +103,177 @@ function bandsInTown() {
                     venueLoc +
                     "Concert Date/Time: " + concertDate + "\n"
                 );
+
+
+            }
+        }
+
+
+    })
+        .catch(function (error) {
+            if (error.response) {
+                console.log("-----------Data-----------");
+                console.log(error.response.data);
+                console.log("-----------Status-----------");
+                console.log(error.response.status);
+                console.log("-----------Status-----------");
+                console.log(error.response.headers);
+            }
+            else if (error.request) {
+                console.log(error.request);
+            }
+            else {
+                console.log("Error", error.message);
+            }
+            console.log(error.config);
+        });
+
+}
+
+function spotifyThis() {
+
+    spotify.search({ type: 'track', query: userQuery, limit: 10 }, function (err, data) {
+        if (err) {
+            return console.log("Spotify Error occured: " + err);
+        }
+        // console.log(data);
+        if (data.tracks.items.length === 0) {
+            console.log(spacer);
+            console.log("Please enter a valid song name...\n");
+            console.log(spacer);
+
+        } else {
+
+            for (var j = 0; j < data.tracks.items.length; j++) {
+
+                console.log("=====Artists=====");
+
+                for (var x = 0; x < data.tracks.items[j].artists.length; x++) {
+
+                    var songArtists = "";
+                    if (x > 0 && x < data.tracks.items[j].artists.length) {
+
+                        var strArtists = data.tracks.items[j].artists[x].name;
+                        songArtists = songArtists + strArtists;
+
+                    } else {
+                        songArtists += strArtists;
+
+                    }
+
+                    console.log(parseInt(x + 1) + ". " + songArtists);
+
+                }
+
+                console.log("\nSong Name: " + data.tracks.items[j].name + "\n" +
+                    "Preview Link: " + data.tracks.items[j].external_urls.spotify + "\n" +
+                    "Album: " + data.tracks.items[j].album.name + "\n"
+                );
                 console.log(spacer);
 
             }
         }
+    });
+
+}
+
+function spotifyEmpty() {
+    spotify.search({ type: 'track', query: "the sign" }, function (err, data) {
+        if (err) {
+            return console.log("Spotify Error occured: " + err);
+        }
+        console.log("=====Artists=====");
+        console.log(1 + ". " + data.tracks.items[4].album.artists.name);
+
+        console.log("\nSong Name: " + data.tracks.items[4].name + "\n" +
+            "Preview Link: " + data.tracks.items[4].external_urls.spotify + "\n" +
+            "Album: " + data.tracks.items[4].album.name + "\n"
+        );
+        console.log(spacer);
+    });
+}
+
+function movieSearch() {
+
+    axios.get(movies).then(function (response) {
+        // console.log(response);
+        // console.log(userQuery);
+        if (response.data.Response === "False") {
+            console.log(spacer);
+            console.log("Please enter a valid movie title...\n");
+            console.log(spacer);
+
+        } else {
+            var rottenTom = "";
+            for (var y = 0; y < response.data.Ratings.length; y++) {
+                if (response.data.Ratings[y].Source === "Rotten Tomatoes") {
+                    rottenTom = response.data.Ratings[y].Value;
+                } else {
+                    continue;
+                }
+            }
+
+            console.log(spacer);
+            console.log("Movie Title: " + response.data.Title + "\n" +
+                "Release date: " + response.data.Year + "\n" +
+                "IMDB Rating: " + response.data.imdbRating + "/10\n" +
+                "Rotten Tomatoes Rating: " + rottenTom + "\n" +
+                "Produced in: " + response.data.Country + "\n" +
+                "Languages: " + response.data.Language + "\n" +
+                "----- PLOT -----\n" + response.data.Plot + "\n----------------\n" +
+                "Actors: " + response.data.Actors
+            );
+            console.log(spacer);
+        }
+
+
+    })
+        .catch(function (error) {
+            if (error.response) {
+                console.log("-----------Data-----------");
+                console.log(error.response.data);
+                console.log("-----------Status-----------");
+                console.log(error.response.status);
+                console.log("-----------Status-----------");
+                console.log(error.response.headers);
+            }
+            else if (error.request) {
+                console.log(error.request);
+            }
+            else {
+                console.log("Error", error.message);
+            }
+            console.log(error.config);
+        });
+
+}
+
+function movieEmpty() {
+    movies = "http://www.omdbapi.com/?t=mr+nobody&y=&plot=short&apikey=trilogy";
+    axios.get(movies).then(function (response) {
+        // console.log(response);
+        // console.log(userQuery);
+        var rottenTom = "";
+        for (var y = 0; y < response.data.Ratings.length; y++) {
+            if (response.data.Ratings[y].Source === "Rotten Tomatoes") {
+                rottenTom = response.data.Ratings[y].Value;
+            } else {
+                continue;
+            }
+        }
+
+        console.log(spacer);
+        console.log("Movie Title: " + response.data.Title + "\n" +
+            "Release date: " + response.data.Year + "\n" +
+            "IMDB Rating: " + response.data.imdbRating + "/10\n" +
+            "Rotten Tomatoes Rating: " + rottenTom + "\n" +
+            "Produced in: " + response.data.Country + "\n" +
+            "Languages: " + response.data.Language + "\n" +
+            "----- PLOT -----\n" + response.data.Plot + "\n----------------\n" +
+            "Actors: " + response.data.Actors
+        );
+        console.log(spacer);
+
 
 
     })

@@ -147,26 +147,10 @@ function spotifyThis() {
 
             for (var j = 0; j < data.tracks.items.length; j++) {
 
-                console.log("=====Artists=====");
-
-                for (var x = 0; x < data.tracks.items[j].artists.length; x++) {
-
-                    var songArtists = "";
-                    if (x > 0 && x < data.tracks.items[j].artists.length) {
-
-                        var strArtists = data.tracks.items[j].artists[x].name;
-                        songArtists = songArtists + strArtists;
-
-                    } else {
-                        songArtists += strArtists;
-
-                    }
-
-                    console.log(parseInt(x + 1) + ". " + songArtists);
-
-                }
-
-                console.log("\nSong Name: " + data.tracks.items[j].name + "\n" +
+                
+                var songArtists = data.tracks.items[j].artists.join(", ");
+                
+                console.log("\nArtists: " + songArtists.name + "\nSong Name: " + data.tracks.items[j].name + "\n" +
                     "Preview Link: " + data.tracks.items[j].external_urls.spotify + "\n" +
                     "Album: " + data.tracks.items[j].album.name + "\n"
                 );

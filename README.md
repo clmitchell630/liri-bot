@@ -51,3 +51,18 @@ Which command you use will determine which function is excecuted within the app.
     ```
 4.  Enjoy!
 
+## Pictures!
+
+Here is a link for a video demo of liri bot: [Liri Bot Demo](https://youtu.be/s076Wo2j3Os)
+
+The demo does not demo the do-what-it-says command! I forgot to include it in the recording and I ran out of time O__O... But, here are some pictures!
+
+#### "concert-this" command
+![alt text](./images/concert-this.png "concert-this")
+#### "spotify-this-song" command
+![alt text](./images/spotify-this.png "spotify-this-song")
+#### "movie-this" command
+![alt text](./images/movie-this.png "movie-this")
+#### "do-what-it-says" command
+![alt text](./images/do-this.png "do-what-it-says")
+
